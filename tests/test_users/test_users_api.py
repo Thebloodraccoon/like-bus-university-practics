@@ -52,11 +52,11 @@ def test_get_user_nonexistent_by_id(client, test_admin_token):
     assert response.json()["detail"] == "User with ID 999 not found."
 
 
-def test_invite_user(client, test_admin_token):
+def test_create_user(client, test_admin_token):
     new_user_data = {"email": "newuser@example.com", "role": "polonus_manager"}
 
     response = client.post(
-        "/user/invite-user",
+        "/user/",
         json=new_user_data,
         headers={"Authorization": f"Bearer {test_admin_token.credentials}"},
     )
@@ -70,11 +70,11 @@ def test_invite_user(client, test_admin_token):
     assert data["role"] == new_user_data["role"]
 
 
-def test_invite_user_duplicate(client, test_admin_token, test_user):
+def test_create_user_duplicate(client, test_admin_token, test_user):
     new_user_data_duplicate = {"email": test_user.email, "role": test_user.role}
 
     response = client.post(
-        "/user/invite-user",
+        "/user/",
         json=new_user_data_duplicate,
         headers={"Authorization": f"Bearer {test_admin_token.credentials}"},
     )
@@ -84,11 +84,11 @@ def test_invite_user_duplicate(client, test_admin_token, test_user):
     assert data["detail"] == f"User with email {test_user.email} already exists."
 
 
-def test_invite_user_wrong_email(client, test_admin_token, test_user):
+def test_create_user_wrong_email(client, test_admin_token, test_user):
     new_user_data = {"email": "newusedcs", "role": "polonus_manager"}
 
     response = client.post(
-        "/user/invite-user",
+        "/user/",
         json=new_user_data,
         headers={"Authorization": f"Bearer {test_admin_token.credentials}"},
     )
