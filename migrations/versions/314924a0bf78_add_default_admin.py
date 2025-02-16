@@ -5,20 +5,21 @@ Revises: 25bc2f910262
 Create Date: 2025-02-16 21:20:13.494961
 
 """
+
 from datetime import datetime
 from typing import Sequence, Union
 
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy import Integer
-from sqlalchemy.sql import table, column
+from sqlalchemy.sql import column, table
 
 from app.constants import settings
 from app.utils.auth import get_password_hash
 
 # revision identifiers, used by Alembic.
-revision: str = '314924a0bf78'
-down_revision: Union[str, None] = '25bc2f910262'
+revision: str = "314924a0bf78"
+down_revision: Union[str, None] = "25bc2f910262"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -36,27 +37,28 @@ DEFAULT_ADMIN_EMAIL = settings.ADMIN_LOGIN
 DEFAULT_ADMIN_PASSWORD = settings.ADMIN_PASSWORD.get_secret_value()
 
 
-
 def upgrade() -> None:
     conn = op.get_bind()
 
     stmt = sa.text("SELECT id FROM users WHERE email = :email")
-    admin_exists = conn.execute(stmt, {"email": DEFAULT_ADMIN_EMAIL}).fetchone() is not None
+    admin_exists = (
+        conn.execute(stmt, {"email": DEFAULT_ADMIN_EMAIL}).fetchone() is not None
+    )
 
     if admin_exists:
-        stmt = (
-            sa.text("""
+        stmt = sa.text(
+            """
                         UPDATE users 
                         SET hashed_password = :hashed_password 
                         WHERE email = :email
-                    """)
+                    """
         )
         conn.execute(
             stmt,
             {
                 "email": DEFAULT_ADMIN_EMAIL,
-                "hashed_password": get_password_hash(DEFAULT_ADMIN_PASSWORD)
-            }
+                "hashed_password": get_password_hash(DEFAULT_ADMIN_PASSWORD),
+            },
         )
     else:
         op.bulk_insert(
@@ -70,6 +72,7 @@ def upgrade() -> None:
                 }
             ],
         )
+
 
 def downgrade() -> None:
     conn = op.get_bind()

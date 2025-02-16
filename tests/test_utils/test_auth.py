@@ -1,19 +1,17 @@
+from datetime import datetime, timedelta, timezone
+
 import pytest
-
-from datetime import datetime, timezone, timedelta
-
 from fastapi.security import HTTPAuthorizationCredentials
 from jose import jwt
 
-
 from app.constants import settings
 from app.utils.auth import (
-    get_password_hash,
-    verify_password,
-    create_access_token,
     blacklist_token,
-    is_token_blacklisted,
+    create_access_token,
+    get_password_hash,
     get_payload,
+    is_token_blacklisted,
+    verify_password,
 )
 
 SECRET_KEY = settings.JWT_SECRET_KEY.get_secret_value()

@@ -5,7 +5,7 @@ from fastapi import HTTPException
 from fastapi.security import HTTPAuthorizationCredentials
 from jose import jwt
 
-from app.auth.utils import admin_only, get_current_user, logout_user, get_user
+from app.auth.utils import admin_only, get_current_user, get_user, logout_user
 from app.constants import settings
 from app.exceptions.user_exceptions import UserNotFoundException
 

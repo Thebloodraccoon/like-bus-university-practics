@@ -22,8 +22,6 @@ def get_current_user_info(current_user_info: User = Depends(get_current_user)):
     )
 
 
-
-
 @router.get("/list", response_model=List[UserResponse])
 def get_all_users(
     db: Session = Depends(get_db),
@@ -50,6 +48,7 @@ def update_user(
 ):
     user = crud_user.update_user(db, user_id, updates.model_dump(exclude_unset=True))
     return user
+
 
 @router.post("/", response_model=UserResponse)
 async def create_user(

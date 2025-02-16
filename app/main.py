@@ -1,5 +1,4 @@
 from fastapi import FastAPI  # type: ignore
-from fastapi.middleware.cors import CORSMiddleware  # type: ignore
 
 from app.auth.endpoints import router as auth_router
 from app.conf import lifespan
