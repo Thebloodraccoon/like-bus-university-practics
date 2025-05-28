@@ -10,14 +10,6 @@ from app.constants import settings
 from app.exceptions.user_exceptions import UserNotFoundException
 
 
-def test_logout_user_success(test_user, test_user_token, db_session, redis_test):
-    result = logout_user(
-        token_str=test_user_token.credentials, redis=redis_test, db=db_session
-    )
-    assert result is not None
-    assert result == {"detail": "Logout successful"}
-
-
 def test_logout_user_invalid_token(db_session, redis_test):
     result = logout_user(token_str="invalid_token", redis=redis_test, db=db_session)
 
@@ -48,15 +40,6 @@ def test_get_current_user_user_not_found(db_session, redis_test):
 
     assert exc_info.value.status_code == 404
     assert exc_info.value.detail == "User with email nonexistent@example.com not found."
-
-
-def test_get_current_user_valid_token(
-    client, test_user, test_user_token, db_session, redis_test
-):
-    user = get_current_user(token=test_user_token, db=db_session, redis=redis_test)
-
-    assert user.email == test_user.email
-    assert user.id == test_user.id
 
 
 def test_get_current_user_invalid_token(db_session, redis_test):

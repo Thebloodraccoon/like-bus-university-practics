@@ -132,25 +132,3 @@ jobs:
           TEST_HOST_REDIS: localhost
           TEST_PORT_REDIS: 6380
           TEST_DB_REDIS: 0
-
-  deploy:
-    needs: lint-and-test
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Echo deployment
-        run: |
-          echo "Deploying application..."
-          echo "Version: $(date +%Y-%m-%d-%H-%M-%S)"
-          echo "Commit: ${{ github.sha }}"
-          echo "Branch: ${{ github.ref }}"
-          echo "Application would be deployed to production"
-
-      - name: Notify deployment success
-        run: |
-          echo "Application successfully deployed!"
-          echo "Deployment URL: ${{ secrets.DEPLOYMENT_URL }}"
