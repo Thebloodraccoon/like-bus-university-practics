@@ -1,5 +1,6 @@
 from fastapi import status
 from jose import jwt
+
 from app.constants import settings
 
 
@@ -56,13 +57,17 @@ def test_login_missing_fields(client):
     response = client.post("/auth/login", json={})
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
+
 def test_login_token_contains_email(client, test_user):
     response = client.post(
-        "/auth/login",
-        json={"email": test_user.email, "password": "testpassword123"}
+        "/auth/login", json={"email": test_user.email, "password": "testpassword123"}
     )
     access_token = response.json()["access_token"]
-    payload = jwt.decode(access_token, settings.JWT_SECRET_KEY.get_secret_value(), algorithms=[settings.JWT_ALGORITHM])
+    payload = jwt.decode(
+        access_token,
+        settings.JWT_SECRET_KEY.get_secret_value(),
+        algorithms=[settings.JWT_ALGORITHM],
+    )
     assert payload["sub"] == test_user.email
 
 
