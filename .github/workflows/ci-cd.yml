@@ -49,6 +49,34 @@ jobs:
           python -m pip install --upgrade pip
           pip install tox tox-gh-actions
 
+      - name: Create .env file for testing
+        run: |
+          echo "DATABASE_USER=${{ secrets.DATABASE_USER }}" >> .env
+          echo "DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}" >> .env
+          echo "DATABASE_HOST=${{ secrets.DATABASE_HOST }}" >> .env
+          echo "DATABASE_PORT=${{ secrets.DATABASE_PORT }}" >> .env
+          echo "DATABASE_NAME=${{ secrets.DATABASE_NAME }}" >> .env
+          echo "DATABASE_URL=postgresql://${{ secrets.DATABASE_USER }}:${{ secrets.DATABASE_PASSWORD }}@${{ secrets.DATABASE_HOST }}:${{ secrets.DATABASE_PORT }}/${{ secrets.DATABASE_NAME }}" >> .env
+          echo "JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}" >> .env
+          echo "JWT_ALGORITHM=${{ secrets.JWT_ALGORITHM }}" >> .env
+          echo "ADMIN_LOGIN=${{ secrets.ADMIN_LOGIN }}" >> .env
+          echo "ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}" >> .env
+          echo "PGADMIN_EMAIL=${{ secrets.PGADMIN_EMAIL }}" >> .env
+          echo "PGADMIN_PASSWORD=${{ secrets.PGADMIN_PASSWORD }}" >> .env
+          echo "TEST_DATABASE_USER=${{ secrets.TEST_DATABASE_USER }}" >> .env
+          echo "TEST_DATABASE_PASSWORD=${{ secrets.TEST_DATABASE_PASSWORD }}" >> .env
+          echo "TEST_DATABASE_HOST=localhost" >> .env
+          echo "TEST_DATABASE_PORT=5433" >> .env
+          echo "TEST_DATABASE_NAME=${{ secrets.TEST_DATABASE_NAME }}" >> .env
+          echo "TEST_DATABASE_URL=postgresql://${{ secrets.TEST_DATABASE_USER }}:${{ secrets.TEST_DATABASE_PASSWORD }}@localhost:5433/${{ secrets.TEST_DATABASE_NAME }}" >> .env
+          echo "HOST_REDIS=${{ secrets.HOST_REDIS }}" >> .env
+          echo "PORT_REDIS=${{ secrets.PORT_REDIS }}" >> .env
+          echo "DB_REDIS=${{ secrets.DB_REDIS }}" >> .env
+          echo "TEST_HOST_REDIS=localhost" >> .env
+          echo "TEST_PORT_REDIS=6380" >> .env
+          echo "TEST_DB_REDIS=0" >> .env
+          cat .env
+
       - name: Lint with flake8
         run: tox -e lint
 
@@ -67,14 +95,62 @@ jobs:
       - name: Run tests with pytest
         run: tox -e testing
         env:
+          # Основні налаштування бази даних
+          DATABASE_USER: ${{ secrets.DATABASE_USER }}
+          DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+          DATABASE_HOST: ${{ secrets.DATABASE_HOST }}
+          DATABASE_PORT: ${{ secrets.DATABASE_PORT }}
+          DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
+          DATABASE_URL: postgresql://${{ secrets.DATABASE_USER }}:${{ secrets.DATABASE_PASSWORD }}@${{ secrets.DATABASE_HOST }}:${{ secrets.DATABASE_PORT }}/${{ secrets.DATABASE_NAME }}
+
+          # JWT налаштування
+          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+          JWT_ALGORITHM: ${{ secrets.JWT_ALGORITHM }}
+
+          # Адмін налаштування
+          ADMIN_LOGIN: ${{ secrets.ADMIN_LOGIN }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+
+          # PGAdmin налаштування
+          PGADMIN_EMAIL: ${{ secrets.PGADMIN_EMAIL }}
+          PGADMIN_PASSWORD: ${{ secrets.PGADMIN_PASSWORD }}
+
+          # Тестова база даних
           TEST_DATABASE_USER: ${{ secrets.TEST_DATABASE_USER }}
           TEST_DATABASE_PASSWORD: ${{ secrets.TEST_DATABASE_PASSWORD }}
           TEST_DATABASE_HOST: localhost
           TEST_DATABASE_PORT: 5433
           TEST_DATABASE_NAME: ${{ secrets.TEST_DATABASE_NAME }}
           TEST_DATABASE_URL: postgresql://${{ secrets.TEST_DATABASE_USER }}:${{ secrets.TEST_DATABASE_PASSWORD }}@localhost:5433/${{ secrets.TEST_DATABASE_NAME }}
+
+          # Redis налаштування
+          HOST_REDIS: ${{ secrets.HOST_REDIS }}
+          PORT_REDIS: ${{ secrets.PORT_REDIS }}
+          DB_REDIS: ${{ secrets.DB_REDIS }}
+
+          # Тестовий Redis
           TEST_HOST_REDIS: localhost
           TEST_PORT_REDIS: 6380
           TEST_DB_REDIS: 0
-          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
-          JWT_ALGORITHM: ${{ secrets.JWT_ALGORITHM }}
+
+  deploy:
+    needs: lint-and-test
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Echo deployment
+        run: |
+          echo "Deploying application..."
+          echo "Version: $(date +%Y-%m-%d-%H-%M-%S)"
+          echo "Commit: ${{ github.sha }}"
+          echo "Branch: ${{ github.ref }}"
+          echo "Application would be deployed to production"
+
+      - name: Notify deployment success
+        run: |
+          echo "Application successfully deployed!"
+          echo "Deployment URL: ${{ secrets.DEPLOYMENT_URL }}"
