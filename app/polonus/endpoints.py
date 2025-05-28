@@ -7,7 +7,7 @@ polonus = FastAPI(title="Polonus", description="Polonus SubApp", version="1.0.0"
 
 
 @polonus.post("/get-passengers", response_model=RouteResponse)
-async def get_passengers(route_request: RouteRequest):
+async def get_passengers_v2(route_request: RouteRequest):
     passengers = await get_passenger_data(
         route_request.date, str(route_request.route_id)
     )

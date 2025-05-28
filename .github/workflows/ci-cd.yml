@@ -1,0 +1,102 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      test_db:
+        image: postgres:15
+        env:
+          POSTGRES_USER: ${{ secrets.TEST_DATABASE_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.TEST_DATABASE_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.TEST_DATABASE_NAME }}
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      test_redis:
+        image: redis:alpine
+        ports:
+          - 6380:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install tox tox-gh-actions
+
+      - name: Lint with flake8
+        run: tox -e lint
+
+      - name: Sort imports check
+        run: tox -e sort-imports
+
+      - name: Format check with black
+        run: tox -e format
+
+      - name: Security check with bandit
+        run: tox -e security
+
+      - name: Type check with mypy
+        run: tox -e typecheck
+
+      - name: Run tests with pytest
+        run: tox -e testing
+        env:
+          TEST_DATABASE_USER: ${{ secrets.TEST_DATABASE_USER }}
+          TEST_DATABASE_PASSWORD: ${{ secrets.TEST_DATABASE_PASSWORD }}
+          TEST_DATABASE_HOST: localhost
+          TEST_DATABASE_PORT: 5433
+          TEST_DATABASE_NAME: ${{ secrets.TEST_DATABASE_NAME }}
+          TEST_DATABASE_URL: postgresql://${{ secrets.TEST_DATABASE_USER }}:${{ secrets.TEST_DATABASE_PASSWORD }}@localhost:5433/${{ secrets.TEST_DATABASE_NAME }}
+          TEST_HOST_REDIS: localhost
+          TEST_PORT_REDIS: 6380
+          TEST_DB_REDIS: 0
+          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+          JWT_ALGORITHM: ${{ secrets.JWT_ALGORITHM }}
+
+  deploy:
+    needs: lint-and-test
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Echo deployment
+        run: |
+          echo "Deploying application..."
+          echo "Version: $(date +%Y-%m-%d-%H-%M-%S)"
+          echo "Commit: ${{ github.sha }}"
+          echo "Branch: ${{ github.ref }}"
+          echo "Application would be deployed to production"
+
+      - name: Notify deployment success
+        run: |
+          echo "Application successfully deployed!"
+          echo "Deployment URL: ${{ secrets.DEPLOYMENT_URL }}"
